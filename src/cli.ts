@@ -7,11 +7,15 @@ import { runAllDetectors } from './detectors/orchestrator.js';
 import { filterFalsePositives } from './filters/false-positives.js';
 import { RawFinding } from './types.js';
 import { generateReport, serializeReport } from './reporters/json.js';
+import { generateTextReport } from './reporters/text.js';
+import { generateHtmlReport } from './reporters/html.js';
 
 interface CLIOptions {
   directory: string;
   verbose: boolean;
   summary: boolean;
+  text: boolean;
+  html: string | null;
   maxFileSize: number;
   maxFindings: number;
 }
@@ -21,6 +25,8 @@ function parseArgs(args: string[]): CLIOptions {
     directory: '.',
     verbose: false,
     summary: false,
+    text: false,
+    html: null,
     maxFileSize: 1 * 1024 * 1024, // 1MB default
     maxFindings: 10000, // default limit
   };
@@ -30,6 +36,11 @@ function parseArgs(args: string[]): CLIOptions {
       options.verbose = true;
     } else if (args[i] === '--summary') {
       options.summary = true;
+    } else if (args[i] === '--text') {
+      options.text = true;
+    } else if (args[i] === '--html' && i + 1 < args.length) {
+      options.html = args[i + 1];
+      i++;
     } else if (args[i] === '--max-file-size' && i + 1 < args.length) {
       options.maxFileSize = parseInt(args[i + 1], 10) || 1 * 1024 * 1024;
       i++;
@@ -104,14 +115,39 @@ function main(): void {
     filteredFindings.length = options.maxFindings;
   }
 
+  const scanDuration = Date.now() - startTime;
+
   if (options.verbose) {
-    process.stderr.write(`Scanned ${scannedCount} files in ${(Date.now() - startTime)}ms\n`);
+    process.stderr.write(`Scanned ${scannedCount} files in ${scanDuration}ms\n`);
     process.stderr.write(`Found ${filteredFindings.length} potential secrets\n`);
   }
 
-  // Generate report (or summary)
+  // Generate report based on mode
   let output: string;
-  if (options.summary) {
+  
+  if (options.text) {
+    // Text mode: concise console output
+    const textReport = generateTextReport({
+      scannedFiles: scannedCount,
+      totalFindings: filteredFindings.length,
+      scanTime: scanDuration,
+      findings: filteredFindings,
+    });
+    output = textReport;
+  } else if (options.html) {
+    // HTML mode: write to file
+    const timestamp = new Date().toISOString();
+    const htmlReport = generateHtmlReport({
+      scannedFiles: scannedCount,
+      totalFindings: filteredFindings.length,
+      scanTime: scanDuration,
+      findings: filteredFindings,
+      timestamp,
+    });
+    fs.writeFileSync(options.html, htmlReport, 'utf-8');
+    process.stderr.write(`HTML report written to ${options.html}\n`);
+    output = JSON.stringify({ status: 'ok', file: options.html }, null, 2);
+  } else if (options.summary) {
     // Summary mode: just list files with findings
     const fileCounts = new Map<string, number>();
     for (const f of filteredFindings) {
@@ -126,6 +162,7 @@ function main(): void {
     };
     output = JSON.stringify(summary, null, 2);
   } else {
+    // Default: full JSON report
     const report = generateReport(filteredFindings, scannedCount);
     output = serializeReport(report);
   }

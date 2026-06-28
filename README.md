@@ -33,8 +33,14 @@ npx tsx src/cli.ts ./path/to/scan
 # Verbose mode (logs to stderr)
 npx tsx src/cli.ts -v ./path/to/scan
 
-# Summarized mode (only affected files, no details)
+# Summary mode (JSON with affected files only)
 npx tsx src/cli.ts --summary ./path/to/scan
+
+# Text mode (formatted console output)
+npx tsx src/cli.ts --text ./path/to/scan
+
+# HTML mode (generates HTML report)
+npx tsx src/cli.ts --html report.html ./path/to/scan
 
 # Custom file size limit (default: 1MB)
 npx tsx src/cli.ts --max-file-size 2097152 ./path/to/scan
@@ -50,13 +56,17 @@ npm run build
 node dist/cli.js
 node dist/cli.js -v ./path/to/scan
 node dist/cli.js --summary ./path/to/scan
+node dist/cli.js --text ./path/to/scan
+node dist/cli.js --html report.html ./path/to/scan
 ```
 
-## Output
+## Output Modes
 
-JSON report to stdout:
+The scanner supports multiple output formats:
 
-### Default mode (detailed)
+### 1️⃣ JSON (default)
+
+Full detailed report to stdout:
 
 ```json
 {
@@ -74,12 +84,18 @@ JSON report to stdout:
 }
 ```
 
-### Summary mode (`--summary`)
+**Best for:** CI/CD pipelines, scripts, programmatic processing
+
+---
+
+### 2️⃣ Summary (`--summary`)
+
+Compact JSON with only affected files:
 
 ```json
 {
   "version": "1",
-  "scannedFiles": 1000,
+  "scannedFiles": 150000,
   "affectedFiles": [
     {"file": "config.env", "findings": 3},
     {"file": "server.key", "findings": 1}
@@ -87,10 +103,67 @@ JSON report to stdout:
 }
 ```
 
+**Best for:** Quick overview, large directory scans
+
+---
+
+### 3️⃣ Text (`--text`)
+
+Formatted console output with emojis and visual separation:
+
+```
+╔══════════════════════════════════════════════════╗
+║           SECRET SCAN REPORT                     ║
+╠══════════════════════════════════════════════════╣
+║ Files scanned: 150                               ║
+║ Findings: 7                                      ║
+║ Time: 2.3s                                       ║
+╠══════════════════════════════════════════════════╣
+║ 🔴 HIGH (4)                                      ║
+╠══════════════════════════════════════════════════╣
+║ config.env:2   │ env-assignment   │ wJal...CRET  ║
+║ server.key:1   │ private-key      │ ----... KEY  ║
+╠══════════════════════════════════════════════════╣
+║ 🟡 MEDIUM (2)                                    ║
+╠══════════════════════════════════════════════════╣
+║ config.toml:2  │ env-assignment   │ ***REDACTED***║
+╚══════════════════════════════════════════════════╝
+```
+
+**Best for:** Human inspection, terminal usage
+
+---
+
+### 4️⃣ HTML (`--html report.html`)
+
+Modern, responsive HTML report with statistics and styled table:
+
+![HTML Report](https://i.imgur.com/placeholder.png)
+
+Features:
+- Statistics cards (files scanned, findings count, scan time)
+- Color-coded severity indicators (🔴 high, 🟡 medium, 🔵 low)
+- Responsive design for mobile/desktop
+- Monospace redacted values
+- Generated timestamp
+
+**Best for:** Reports, sharing results, documentation
+
+---
+
 ### Redaction format
 
+All modes use the same redaction:
 - Values ≤ 10 chars: fully masked (`**********`)
 - Values > 10 chars: first 4 + last 4 visible, middle censored with `*`
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | No findings |
+| 1 | Findings detected |
+| 2 | Error (invalid path, permission denied, etc.) |
 
 ## Detectors
 
@@ -154,6 +227,15 @@ npm test
 npx tsc --noEmit
 ```
 
+## Output Modes Summary
+
+| Mode | Flag | Output | Best For |
+|------|------|--------|----------|
+| **JSON** (default) | *(none)* | stdout | CI/CD, scripts |
+| **Summary** | `--summary` | JSON (compact) | Quick overview |
+| **Text** | `--text` | Formatted console | Human inspection |
+| **HTML** | `--html <file>` | HTML file | Reports, sharing |
+
 ## Architecture
 
 ```
@@ -175,8 +257,10 @@ src/
 ├── filters/
 │   ├── binary.ts       # Binary file detection
 │   └── false-positives.ts # Placeholder/UUID removal
-└── reporters/
-    └── json.ts         # JSON report generation with redaction
+├── reporters/
+│   ├── json.ts         # JSON report generation with redaction
+│   ├── text.ts         # Formatted console output
+│   └── html.ts         # HTML report generation
 ```
 
 Each detector is a pure function: `(content, lines, filename) => RawFinding[]`
