@@ -4,15 +4,15 @@ CLI tool that scans directories for leaked secrets (API keys, private keys, JWTs
 
 ## Features
 
-- **Zero dependencies** — only TypeScript + Node 20+ stdlib
+- **Zero dependencies**, only TypeScript + Node 20+ stdlib
 - **9 secret detectors**: AWS keys, Google API, GitHub tokens, Slack tokens, Stripe keys, generic `sk-` keys, PEM private keys, JWTs, env assignments
-- **False positive filtering** — removes placeholders (EXAMPLE, CHANGEME, etc.) and UUIDs
-- **Binary file detection** — skips binary files by extension and content analysis
-- **Deterministic output** — findings sorted by file (lexicographic) then line (ascending)
-- **CI-friendly** — exit codes: `0` (clean), `1` (findings), `2` (error)
-- **Redacted values** — first 4 + last 4 characters visible, middle censored
-- **Memory-efficient** — streaming scan, one file at a time
-- **Summarized mode** — `--summary` for quick overview of affected files
+- **False positive filtering**, removes placeholders (EXAMPLE, CHANGEME, etc.) and UUIDs
+- **Binary file detection**, skips binary files by extension and content analysis
+- **Deterministic output**, findings sorted by file (lexicographic) then line (ascending)
+- **CI-friendly**, exit codes: `0` (clean), `1` (findings), `2` (error)
+- **Redacted values**, first 4 + last 4 characters visible, middle censored
+- **Memory-efficient**, streaming scan, one file at a time
+- **Summarized mode**, `--summary` for quick overview of affected files
 
 ## Installation
 
@@ -153,10 +153,10 @@ Features:
 
 ### Redaction format
 
-All modes use conservative redaction — never reveals more than the type prefix:
+All modes use conservative redaction, never reveals more than the type prefix:
 - Values ≤ 6 chars: fully masked (`****`)
 - Values > 6 chars: first **3 chars** visible (e.g., `AKI****`, `ghp****`), rest censored
-- Never reveals suffix or exact length — prevents partial reconstruction
+- Never reveals suffix or exact length, preventing partial reconstruction
 
 ### Exit codes
 
@@ -212,7 +212,7 @@ Based on a scan of ~140K files:
 | Detailed | ~47s | ~200 (no false positives) |
 | Summary | ~47s | ~100 affected files |
 
-The scanner uses streaming architecture — only findings accumulate in memory, not file contents.
+The scanner uses streaming architecture, only findings accumulate in memory, not file contents.
 
 ## Development
 
@@ -270,19 +270,19 @@ Each detector is a pure function: `(content, lines, filename) => RawFinding[]`
 
 ## Security Considerations
 
-- **Zero runtime dependencies** — no supply chain risk
-- **Conservative redaction** — only 3-char prefix visible, never suffix or length
-- **XSS-safe HTML output** — all user-controlled fields are escaped
-- **Scans dotfiles** — `.env`, `.npmrc`, `.aws/credentials` are included (the #1 leak source)
-- **No ReDoS** — all regex patterns are linear, no catastrophic backtracking
-- **Does NOT scan git history** — only the working tree. Use `gitleaks` or `trufflehog` for history scans
-- **High-entropy detector removed** — too many false positives (>99.99%), not useful for real secret detection
+- **Zero runtime dependencies**, no supply chain risk
+- **Conservative redaction**, only 3-char prefix visible, never suffix or length
+- **XSS-safe HTML output**, all user-controlled fields are escaped
+- **Scans dotfiles**, `.env`, `.npmrc`, `.aws/credentials` are included (the #1 leak source)
+- **No ReDoS**, all regex patterns are linear, no catastrophic backtracking
+- **Does NOT scan git history**, only the working tree. Use `gitleaks` or `trufflehog` for history scans
+- **High-entropy detector removed**, too many false positives (>99.99%), not useful for real secret detection
 
 ## Limitations
 
 - Only scans the working tree, not git history
-- Regex-based detection only — not a replacement for tools like `gitleaks` or `trufflehog` for production use
-- A "green scan" does NOT prove absence of secrets — only absence of detected patterns
+- Regex-based detection only, not a replacement for tools like `gitleaks` or `trufflehog` for production use
+- A "green scan" does NOT prove absence of secrets, only absence of detected patterns
 
 ## Production Workflow
 
