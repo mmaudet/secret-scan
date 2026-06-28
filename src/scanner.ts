@@ -31,7 +31,8 @@ export function* scanDirectoryLazy(
     }
 
     for (const entry of entries) {
-      if (entry.name.startsWith('.')) continue;
+      // Skip ignored directories (.git, node_modules, etc.)
+      // Note: dotfiles like .env ARE scanned — they're the #1 leak source
       if (IGNORED_DIRS.has(entry.name)) continue;
 
       const fullPath = path.join(currentPath, entry.name);

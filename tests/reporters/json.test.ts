@@ -33,7 +33,8 @@ describe('generateReport', () => {
     ];
 
     const report = generateReport(findings, 1);
-    assert.equal(report.findings[0].redacted, 'AKIA************MPLE');
+    // New redaction: only first 3 chars, never suffix (20 chars total)
+    assert.equal(report.findings[0].redacted, 'AKI*****************');
   });
 
   it('should handle empty findings', () => {

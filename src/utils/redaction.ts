@@ -1,13 +1,15 @@
 /**
- * Redact a secret value: keep first 4 + last 4 characters visible.
- * If length ≤ 10, mask entirely.
+ * Redact a secret value conservatively.
+ * Shows only a short prefix (first 3 chars) and masks the rest.
+ * Does NOT reveal length or suffix — prevents partial reconstruction.
  */
 export function redact(value: string): string {
-  if (value.length <= 10) {
-    return '*'.repeat(value.length);
+  if (value.length <= 6) {
+    return '*'.repeat(Math.max(value.length, 4));
   }
-  const prefix = value.substring(0, 4);
-  const suffix = value.substring(value.length - 4);
-  const middle = '*'.repeat(value.length - 8);
-  return `${prefix}${middle}${suffix}`;
+  // Show only first 3 chars (usually the type prefix: AKIA, ghp_, sk_, etc.)
+  // Never reveal the suffix — it may be the actual secret part
+  const prefix = value.substring(0, 3);
+  const masked = '*'.repeat(Math.max(value.length - 3, 8));
+  return `${prefix}${masked}`;
 }

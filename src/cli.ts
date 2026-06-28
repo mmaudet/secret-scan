@@ -107,11 +107,9 @@ function main(): void {
     return a.line - b.line;
   });
 
-  // Truncate to max findings (with warning)
+  // Truncate to max findings (always warn — silent truncation is dangerous)
   if (filteredFindings.length > options.maxFindings) {
-    if (options.verbose) {
-      process.stderr.write(`Truncating findings: ${filteredFindings.length} -> ${options.maxFindings} (use --max-findings to increase)\n`);
-    }
+    process.stderr.write(`⚠ Warning: ${filteredFindings.length} findings truncated to ${options.maxFindings} (use --max-findings to increase)\n`);
     filteredFindings.length = options.maxFindings;
   }
 

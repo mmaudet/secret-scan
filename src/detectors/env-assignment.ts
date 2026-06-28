@@ -23,7 +23,8 @@ const SECRET_KEY_PATTERNS = [
 ];
 
 function isConfigFile(filePath: string): boolean {
-  const ext = filePath.slice(filePath.lastIndexOf('.')).toLowerCase();
+  const dotIndex = filePath.lastIndexOf('.');
+  const ext = dotIndex >= 0 ? filePath.substring(dotIndex).toLowerCase() : '';
   return CONFIG_EXTENSIONS.has(ext);
 }
 
