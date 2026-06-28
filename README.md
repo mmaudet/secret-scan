@@ -284,6 +284,26 @@ Each detector is a pure function: `(content, lines, filename) => RawFinding[]`
 - Regex-based detection only — not a replacement for tools like `gitleaks` or `trufflehog` for production use
 - A "green scan" does NOT prove absence of secrets — only absence of detected patterns
 
+## Production Workflow
+
+Use `secret-scan` for working-tree checks + `gitleaks` for git history:
+
+```bash
+# Working tree scan (fast, catches new leaks)
+secret-scan --text .
+
+# Git history scan (catches secrets committed then deleted)
+gitleaks detect --source . --report-format json --report-path gitleaks-report.json
+
+# Combined CI check
+if secret-scan --max-findings 0 .; then
+  echo "Working tree clean"
+fi
+gitleaks detect --source . || echo "⚠ History contains potential secrets"
+```
+
+Install gitleaks: `brew install gitleaks` or `go install github.com/gitleaks/gitleaks/v2/cmd/gitleaks@latest`
+
 ## License
 
 AGPL v3.0
