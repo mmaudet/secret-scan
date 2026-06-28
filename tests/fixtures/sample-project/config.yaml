@@ -1,0 +1,9 @@
+database:
+  host: localhost
+  port: 5432
+  password: wJalrXUtnFEMI/K7MDENG/bPxRfiCYREALSECRET
+  username: admin
+
+api:
+  key: sk-abc123def456ghi789jkl012mno345pqr
+  secret: a8f5f167f44f4964e6c998dee827110c

@@ -1,0 +1,27 @@
+{
+  "name": "secret-scan",
+  "version": "1.0.0",
+  "description": "CLI tool to scan directories for leaked secrets",
+  "type": "module",
+  "main": "dist/cli.js",
+  "bin": {
+    "secret-scan": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:test": "tsc -p tsconfig.test.json",
+    "start": "node dist/cli.js",
+    "test": "npm run build:test && node --test dist-test/tests/**/*.test.js",
+    "clean": "rm -rf dist dist-test",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["secret", "scan", "security", "cli"],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.11.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
