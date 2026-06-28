@@ -8,6 +8,11 @@ export interface ScanFile {
   content: string;
 }
 
+export interface ScanOptions {
+  maxFileSize?: number;
+  onIgnoredFile?: (reason: string, filePath: string) => void;
+}
+
 const IGNORED_DIRS = new Set(['.git', 'node_modules', '.svn', '.hg', 'dist', 'build']);
 
 // Default max file size: 1MB
@@ -20,8 +25,11 @@ const DEFAULT_MAX_FILE_SIZE = 1 * 1024 * 1024;
  */
 export function* scanDirectoryLazy(
   rootPath: string,
-  maxFileSize: number = DEFAULT_MAX_FILE_SIZE,
+  options: ScanOptions = {},
 ): IterableIterator<ScanFile> {
+  const maxFileSize = options.maxFileSize || DEFAULT_MAX_FILE_SIZE;
+  const onIgnoredFile = options.onIgnoredFile;
+
   function* walk(currentPath: string, relativePath: string): IterableIterator<ScanFile> {
     let entries;
     try {
@@ -47,9 +55,19 @@ export function* scanDirectoryLazy(
 
       try {
         const stat = fs.statSync(fullPath);
-        if (stat.size > maxFileSize) continue;
+        if (stat.size > maxFileSize) {
+          if (onIgnoredFile) {
+            onIgnoredFile(`size-exceeded (${stat.size} > ${maxFileSize})`, relPath);
+          }
+          continue;
+        }
         const content = fs.readFileSync(fullPath);
-        if (!isTextFile(fullPath, content)) continue;
+        if (!isTextFile(fullPath, content)) {
+          if (onIgnoredFile) {
+            onIgnoredFile('binary', relPath);
+          }
+          continue;
+        }
         yield {
           path: fullPath,
           relativePath: relPath,
@@ -69,10 +87,10 @@ export function* scanDirectoryLazy(
  */
 export function scanDirectory(
   rootPath: string,
-  maxFileSize: number = DEFAULT_MAX_FILE_SIZE,
+  options?: ScanOptions,
 ): { files: ScanFile[]; error?: string } {
   const files: ScanFile[] = [];
-  for (const file of scanDirectoryLazy(rootPath, maxFileSize)) {
+  for (const file of scanDirectoryLazy(rootPath, options)) {
     files.push(file);
   }
   return { files };

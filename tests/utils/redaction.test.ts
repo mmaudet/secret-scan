@@ -23,13 +23,13 @@ describe('redact', () => {
     assert.ok(result.includes('****'));
   });
 
-  it('should handle exactly 7 characters', () => {
-    const value = '1234567';
-    const result = redact(value);
-    assert.ok(result.startsWith('123'));
-    assert.ok(!result.includes('67')); // suffix NOT revealed
-    // Length is 3 (prefix) + 8 (min masked) = 11
-    assert.equal(result.length, 11);
+  it('should always produce same length regardless of input', () => {
+    // Fixed-length mask — never reveals the secret's length
+    const short = redact('1234567');
+    const long = redact('123456789012345678901234567890');
+    assert.equal(short.length, long.length, 'Redaction should have constant length');
+    assert.equal(short.length, 15); // 3 prefix + 12 masked
+    assert.equal(long.length, 15);
   });
 
   it('should never reveal more than 3 prefix characters', () => {

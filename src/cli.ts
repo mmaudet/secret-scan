@@ -83,8 +83,17 @@ function main(): void {
   // Process files one at a time (streaming) — only findings accumulate in memory
   const allRawFindings: RawFinding[] = [];
   let scannedCount = 0;
+  let ignoredCount = 0;
 
-  for (const file of scanDirectoryLazy(targetDir, options.maxFileSize)) {
+  for (const file of scanDirectoryLazy(targetDir, {
+    maxFileSize: options.maxFileSize,
+    onIgnoredFile: (reason, filePath) => {
+      ignoredCount++;
+      if (options.verbose) {
+        process.stderr.write(`⚠ Ignored ${filePath}: ${reason}\n`);
+      }
+    },
+  })) {
     scannedCount++;
 
     if (options.verbose) {
@@ -95,6 +104,12 @@ function main(): void {
 
     const findings = runAllDetectors(file.content, file.relativePath);
     allRawFindings.push(...findings);
+  }
+
+  if (ignoredCount > 0 && !options.verbose) {
+    process.stderr.write(
+      `⚠ Ignored ${ignoredCount} file(s) (binary or exceeds max file size). ` +
+      `Use -v for details.\n`);
   }
 
   // Filter false positives

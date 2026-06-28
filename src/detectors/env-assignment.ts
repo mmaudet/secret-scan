@@ -23,9 +23,17 @@ const SECRET_KEY_PATTERNS = [
 ];
 
 function isConfigFile(filePath: string): boolean {
-  const dotIndex = filePath.lastIndexOf('.');
-  const ext = dotIndex >= 0 ? filePath.substring(dotIndex).toLowerCase() : '';
-  return CONFIG_EXTENSIONS.has(ext);
+  const lower = filePath.toLowerCase();
+  // Check multi-part extensions first (.env.local, .env.production, .config.js, etc.)
+  const multiPartExts = ['.env.local', '.env.production', '.env.development',
+    '.env.test', '.config.js', '.config.ts', '.config.json', '.config.yml', '.config.yaml'];
+  for (const ext of multiPartExts) {
+    if (lower.endsWith(ext)) return true;
+  }
+  // Fall back to single-char extension check
+  const dotIndex = lower.lastIndexOf('.');
+  const singleExt = dotIndex >= 0 ? lower.substring(dotIndex) : '';
+  return CONFIG_EXTENSIONS.has(singleExt);
 }
 
 function looksLikeSecretKey(key: string): boolean {

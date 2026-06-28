@@ -33,8 +33,8 @@ describe('generateReport', () => {
     ];
 
     const report = generateReport(findings, 1);
-    // New redaction: only first 3 chars, never suffix (20 chars total)
-    assert.equal(report.findings[0].redacted, 'AKI*****************');
+    // New redaction: 3 prefix + 12 masked = 15 chars (constant length)
+    assert.equal(report.findings[0].redacted, 'AKI************');
   });
 
   it('should handle empty findings', () => {
