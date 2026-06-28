@@ -153,9 +153,10 @@ Features:
 
 ### Redaction format
 
-All modes use the same redaction:
-- Values ≤ 10 chars: fully masked (`**********`)
-- Values > 10 chars: first 4 + last 4 visible, middle censored with `*`
+All modes use conservative redaction — never reveals more than the type prefix:
+- Values ≤ 6 chars: fully masked (`****`)
+- Values > 6 chars: first **3 chars** visible (e.g., `AKI****`, `ghp****`), rest censored
+- Never reveals suffix or exact length — prevents partial reconstruction
 
 ### Exit codes
 
@@ -179,6 +180,8 @@ All modes use the same redaction:
 | Private Key | `private-key` | high | `-----BEGIN ... PRIVATE KEY-----` |
 | JWT | `jwt-token` | medium | `eyJ...` with entropy ≥ 3.5 |
 | Env Assignment | `env-assignment` | medium | `SECRET_KEY=value` in config files |
+
+**Note:** The high-entropy string detector was removed due to >99.99% false positive rate.
 
 ## Configuration File Extensions
 
@@ -264,6 +267,22 @@ src/
 ```
 
 Each detector is a pure function: `(content, lines, filename) => RawFinding[]`
+
+## Security Considerations
+
+- **Zero runtime dependencies** — no supply chain risk
+- **Conservative redaction** — only 3-char prefix visible, never suffix or length
+- **XSS-safe HTML output** — all user-controlled fields are escaped
+- **Scans dotfiles** — `.env`, `.npmrc`, `.aws/credentials` are included (the #1 leak source)
+- **No ReDoS** — all regex patterns are linear, no catastrophic backtracking
+- **Does NOT scan git history** — only the working tree. Use `gitleaks` or `trufflehog` for history scans
+- **High-entropy detector removed** — too many false positives (>99.99%), not useful for real secret detection
+
+## Limitations
+
+- Only scans the working tree, not git history
+- Regex-based detection only — not a replacement for tools like `gitleaks` or `trufflehog` for production use
+- A "green scan" does NOT prove absence of secrets — only absence of detected patterns
 
 ## License
 
