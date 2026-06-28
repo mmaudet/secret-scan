@@ -8,7 +8,6 @@ import { detectGenericKey } from './generic-key.js';
 import { detectPrivateKey } from './private-key.js';
 import { detectJWT } from './jwt.js';
 import { detectEnvAssignment } from './env-assignment.js';
-import { detectHighEntropy } from './high-entropy.js';
 
 /**
  * Run all detectors on a file's content.
@@ -27,7 +26,6 @@ export function runAllDetectors(content: string, filename: string): RawFinding[]
   allFindings.push(...detectPrivateKey(content, lines, filename));
   allFindings.push(...detectJWT(content, lines, filename));
   allFindings.push(...detectEnvAssignment(content, lines, filename));
-  allFindings.push(...detectHighEntropy(content, lines, filename));
 
   // Deduplicate by (line, category, rawValue)
   const seen = new Set<string>();

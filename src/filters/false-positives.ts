@@ -24,6 +24,9 @@ function isUUID(value: string): boolean {
 
 export function filterFalsePositives(findings: RawFinding[]): RawFinding[] {
   return findings.filter(finding => {
+    // Skip findings in minified/vendor files
+    if (/\.(min|bundle|all|packed)\.js$/.test(finding.file)) return false;
+
     const value = finding.rawValue;
     if (isPlaceholder(value)) return false;
     if (isUUID(value)) return false;
